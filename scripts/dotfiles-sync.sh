@@ -64,16 +64,17 @@ EXCLUSIONS=(
     --exclude=".pulse-cookie"
 )
 
-# Inclusion list for specific files to sync
+# Inclusion list for specific files to sync, with spaces escaped
 INCLUSIONS=(
-    ".mozilla/firefox/*/chrome/"
-    ".mozilla/firefox/*/user.js"
-    ".config/joplin-desktop/settings.json"
-    ".config/Joplin/Preferences"
-    ".config/Mullvad VPN/gui_settings.json"
-    ".config/Mullvad VPN/Preferences"
-    ".config/VSCodium/User/"
+    "--include=.mozilla/firefox/*/chrome/"
+    "--include=.mozilla/firefox/*/user.js"
+    "--include=.config/joplin-desktop/settings.json"
+    "--include=.config/Joplin/Preferences"
+    "--include=.config/Mullvad\ VPN/gui_settings.json"
+    "--include=.config/Mullvad\ VPN/Preferences"
+    "--include=.config/VSCodium/User/"
 )
+
 
 
 # Initialize/check git repository
@@ -127,21 +128,15 @@ init_git_repo() {
 }
 
 copy_dotfiles() {
-    # Blacklist
     echo "Copying dotfiles to repository..." | tee -a "$TEMP_FILE"
-    rsync -av --no-links "${EXCLUSIONS[@]}" \
-        --include=".*" \
-        --include=".*/**" \
-        --exclude="*" \
+
+    rsync -av --no-links --ignore-missing-args \
+        "${EXCLUSIONS[@]}" \
+        "${INCLUSIONS[@]}" \
+        --exclude='*' \
         "$ACTUAL_HOME/" "$DOTFILES_PATH/"
-
-  # Construct rsync command
-rsync -av --no-links \
-    $(printf -- "--include='%s' " "${INCLUSIONS[@]}") \
-    --exclude='*' \
-    "$ACTUAL_HOME/" "$DOTFILES_PATH"
-
 }
+
 
 # Main script execution
 if [ ! -f "$SETUP_FLAG" ]; then

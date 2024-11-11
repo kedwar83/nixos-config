@@ -62,6 +62,7 @@ EXCLUSIONS=(
     --exclude=".dbus"
     --exclude=".ollama"
     --exclude=".pulse-cookie"
+    --exclude=".xsession-errors.old"
 )
 
 # Inclusion list for specific files to sync, with spaces escaped
@@ -136,7 +137,6 @@ copy_dotfiles() {
         --exclude='*' \
         "$ACTUAL_HOME/" "$DOTFILES_PATH/"
 }
-
 
 # Main script execution
 if [ ! -f "$SETUP_FLAG" ]; then

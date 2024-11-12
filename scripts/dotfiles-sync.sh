@@ -16,67 +16,6 @@ echo "Repo and Dotfiles path: $REPO_PATH"
 echo "Temporary file: $TEMP_FILE"
 echo "Failure log file: $FAILURE_LOG"
 
-# Exclusion list for rsync
-EXCLUSIONS=(
-    # System and general security files
-    --exclude=".Xauthority"
-    --exclude=".xsession-errors"
-    --exclude=".bash_history"
-    --exclude=".ssh"
-    --exclude=".gnupg"
-    --exclude=".pki"
-
-    # General cache and temporary files
-    --exclude=".cache"
-    --exclude=".compose-cache"
-    --exclude=".local/share/Trash/"
-    --exclude="*/recently-used.xbel"
-
-    # Development and build files
-    --exclude=".steam"
-    --exclude=".local/share/Steam"
-    --exclude=".local/share/Rocket\ League/"
-
-    # Nix-specific
-    --exclude=".nix-profile"
-    --exclude=".nix-defexpr"
-    --exclude=".dotfiles"
-    --exclude=".local/state/nix/profiles/home-manager"
-    --exclude=".nixos-config"
-    --exclude=".system_setup_complete"
-
-    --exclude=".mozilla"
-
-    # Brave Browser data
-    --exclude=".config/BraveSoftware/Brave-Browser"
-
-    # Joplin
-
-    # Signal
-    --exclude=".config/Signal\ Beta/"
-
-    # Uncatagorized
-    --exclude=".config/session/"
-    --exclude=".config/Joplin/"
-    --exclude=".config/VSCodium/"
-    --exclude=".dbus"
-    --exclude=".ollama"
-    --exclude=".pulse-cookie"
-    --exclude=".xsession-errors.old"
-)
-
-# Inclusion list for specific files to sync, with spaces escaped
-INCLUSIONS=(
-    "--include=.mozilla/firefox/*/chrome/"
-    "--include=.mozilla/firefox/*/user.js"
-    "--include=.config/joplin-desktop/settings.json"
-    "--include=.config/Joplin/Preferences"
-    "--include=.config/Mullvad\ VPN/gui_settings.json"
-    "--include=.config/Mullvad\ VPN/Preferences"
-    "--include=.config/VSCodium/User/"
-)
-
-
 
 # Initialize/check git repository
 init_git_repo() {
@@ -128,15 +67,95 @@ init_git_repo() {
     fi
 }
 
+
 copy_dotfiles() {
     echo "Copying dotfiles to repository..." | tee -a "$TEMP_FILE"
 
-    rsync -av --no-links --ignore-missing-args \
-        "${EXCLUSIONS[@]}" \
-        "${INCLUSIONS[@]}" \
-        --exclude='*' \
-        "$ACTUAL_HOME/" "$DOTFILES_PATH/"
+rsync -av --no-links --ignore-missing-args \
+  --exclude=".Xauthority" \
+  --exclude=".xsession-errors" \
+  --exclude=".bash_history" \
+  --exclude=".ssh" \
+  --exclude=".gnupg" \
+  --exclude=".pki" \
+  --exclude=".cache" \
+  --exclude=".compose-cache" \
+  --exclude=".local/share/Trash/" \
+  --exclude="*/recently-used.xbel" \
+  --exclude=".steam" \
+  --exclude=".local/share/Steam" \
+  --exclude=".local/share/Rocket League/" \
+  --exclude=".nix-profile" \
+  --exclude=".nix-defexpr" \
+  --exclude=".dotfiles" \
+  --exclude=".local/state/nix/profil es/home-manager" \
+  --exclude=".nixos-config" \
+  --exclude=".system_setup_complete" \
+  --exclude=".mozilla" \
+  --exclude=".config/BraveSoftware/Brave-Browser" \
+  --exclude=".config/Signal Beta/" \
+  --exclude=".config/session/" \
+  --exclude=".config/Joplin/" \
+  --exclude=".config/VSCodium/" \
+  --exclude=".dbus" \
+  --exclude=".ollama" \
+  --exclude=".pulse-cookie" \
+  --exclude=".xsession-errors.old" \
+  --exclude="*" \
+  "$HOME/" "$HOME/.dotfiles/"
+
+   # Define files to copy with relative paths from home directory
+    local -a files=(
+        ".mozilla/firefox/*/chrome/userChrome.css"
+        ".mozilla/firefox/*/chrome/userContent.css"
+        ".mozilla/firefox/*/user.js"
+        ".config/joplin-desktop/settings.json"
+        ".config/Joplin/Preferences"
+        ".config/Mullvad VPN/gui_settings.json"
+        ".config/Mullvad VPN/Preferences"
+        ".config/VSCodium/User/settings.json"
+        ".config/VSCodium/User/keybindings.json"
+    )
+
+    # Create base directories first (excluding wildcarded paths)
+    for file in "${files[@]}"; do
+        if [[ $file != *"*"* ]]; then
+            mkdir -p "$HOME/.dotfiles/$(dirname "$file")"
+        fi
+    done
+
+    # Create Firefox profile directory structure if needed
+    profile_dir=$(find "$HOME/.mozilla/firefox" -maxdepth 1 -type d -name "*.default*" | head -n 1)
+    if [ -n "$profile_dir" ]; then
+        profile_name=${profile_dir##*/}
+        mkdir -p "$HOME/.dotfiles/.mozilla/firefox/$profile_name/chrome"
+    fi
+
+    # Copy each file
+    for file in "${files[@]}"; do
+        if [[ $file == *"/firefox/*/"* ]]; then
+            # Handle Firefox profile directory wildcard
+            if [ -n "$profile_dir" ]; then
+                # Get the path after the wildcard
+                suffix="${file#*.mozilla/firefox/*/}"
+                # Construct the actual source and destination paths
+                src="$profile_dir/$suffix"
+                dst="$HOME/.dotfiles/.mozilla/firefox/$profile_name/$suffix"
+                if [ -f "$src" ]; then
+                    echo "Copying $suffix from Firefox profile"
+                    cp "$src" "$dst" 2>/dev/null || true
+                fi
+            fi
+        else
+            # Handle regular files
+            if [ -f "$HOME/$file" ]; then
+                echo "Copying $file"
+                cp "$HOME/$file" "$HOME/.dotfiles/$file" 2>/dev/null || true
+            fi
+        fi
+    done
 }
+
 
 # Main script execution
 if [ ! -f "$SETUP_FLAG" ]; then

@@ -47,14 +47,19 @@ in {
       dnsovertls = "true";
     };
   };
+
   systemd = {
+    # Define a user service for the mpris-proxy
     user.services.mpris-proxy = {
       description = "Mpris proxy";
       after = ["network.target" "sound.target"];
       wantedBy = ["default.target"];
       serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
     };
+
+    # Define system-wide services
     services = {
+      # Primary input-remapper service
       input-remapper = {
         enable = true;
         description = "Input Remapper Main Service";
@@ -68,17 +73,18 @@ in {
         wantedBy = ["multi-user.target"];
       };
 
+      # Autoloader for input-remapper configuration
       input-remapper-autoload = {
         enable = true;
         description = "Input Remapper Configuration Autoloader";
         after = ["input-remapper.service" "plasma-workspace.target"];
         requires = ["input-remapper.service"];
         serviceConfig = {
-          Type = "oneshot";
+          Type = "oneshot"; # Type set to "oneshot" for a single-run service
           User = username;
           ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
           ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
-          RemainAfterExit = "yes";
+          RemainAfterExit = "yes"; # Keep the service active after running
         };
         wantedBy = ["graphical-session.target"];
       };

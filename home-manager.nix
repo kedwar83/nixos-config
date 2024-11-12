@@ -46,7 +46,8 @@ in {
       services.darkman = {
         enable = true;
         settings = {
-          usegeoclue = true;
+          lat = 35.99;
+          lng = -78.90;
         };
 
         darkModeScripts = {

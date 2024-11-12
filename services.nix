@@ -9,8 +9,9 @@ in {
   services = {
     input-remapper.enable = true;
     avahi.enable = true;
-    geoclue2.enable = true;
     blueman.enable = true;
+
+    # Plasma desktop configuration
     desktopManager.plasma6.enable = true;
     displayManager = {
       autoLogin = {
@@ -19,14 +20,18 @@ in {
       };
       defaultSession = "plasmax11";
     };
+
+    # X server configuration
     xserver = {
       enable = true;
-      displayManager.lightdm.enable = true; # LightDM config should only be here
+      displayManager.lightdm.enable = true;
       xkb = {
         layout = "us";
         variant = "";
       };
     };
+
+    # Printing and audio configuration
     printing.enable = true;
     pipewire = {
       enable = true;
@@ -34,11 +39,15 @@ in {
       pulse.enable = true;
       jack.enable = true;
     };
+
+    # Ollama and Mullvad VPN
     ollama.enable = true;
     mullvad-vpn = {
       enable = true;
       package = pkgs.mullvad-vpn;
     };
+
+    # Systemd-resolved DNS configuration
     resolved = {
       enable = true;
       dnssec = "true";
@@ -48,46 +57,31 @@ in {
     };
   };
 
+  # Define systemd-specific services
   systemd = {
-    # Define a user service for the mpris-proxy
+    # Autoloader service to run at startup and after waking from sleep
+    services.input-remapper-autoload = {
+      enable = true;
+      description = "Input Remapper Configuration Autoloader";
+      after = ["input-remapper.service" "plasma-workspace.target" "suspend.target" "hibernate.target"];
+      requires = ["input-remapper.service"];
+      serviceConfig = {
+        Type = "oneshot"; # Runs once per trigger
+        User = username;
+        ExecStartPre = "${pkgs.coreutils}/bin/sleep 2"; # Delay to ensure all dependencies are ready
+        ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
+        RemainAfterExit = "yes";
+      };
+      # Triggers on session startup, suspend, and hibernate wake-up
+      wantedBy = ["graphical-session.target" "suspend.target" "hibernate.target"];
+    };
+
+    # Define user-level services
     user.services.mpris-proxy = {
       description = "Mpris proxy";
       after = ["network.target" "sound.target"];
       wantedBy = ["default.target"];
       serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
-    };
-
-    # Define system-wide services
-    services = {
-      # Primary input-remapper service
-      input-remapper = {
-        enable = true;
-        description = "Input Remapper Main Service";
-        serviceConfig = {
-          Type = "dbus";
-          BusName = "com.github.sezanzeb.input-remapper";
-          ExecStart = "${pkgs.input-remapper}/bin/input-remapper-service";
-          Restart = "always";
-          RestartSec = "1s";
-        };
-        wantedBy = ["multi-user.target"];
-      };
-
-      # Autoloader for input-remapper configuration
-      input-remapper-autoload = {
-        enable = true;
-        description = "Input Remapper Configuration Autoloader";
-        after = ["input-remapper.service" "plasma-workspace.target"];
-        requires = ["input-remapper.service"];
-        serviceConfig = {
-          Type = "oneshot"; # Type set to "oneshot" for a single-run service
-          User = username;
-          ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
-          ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
-          RemainAfterExit = "yes"; # Keep the service active after running
-        };
-        wantedBy = ["graphical-session.target"];
-      };
     };
   };
 }

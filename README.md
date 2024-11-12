@@ -1,119 +1,173 @@
+# NixOS Configuration
+
+This repository contains my personal NixOS configuration using flakes, including system configurations, home-manager setup, and utility scripts for system maintenance and dotfiles synchronization.
+
+## Repository Structure
+```
 nixos-config/
-├── flake.nix
+├── flake.nix                     # Main flake configuration
 ├── hosts/
 │   └── desktop.nix               # Desktop-specific configuration
 ├── hardware/
-│   └── desktop-hardware.nix      # Hardware-specific settings for desktop
-├── modules/                      # Directory for modular files
-│   ├── boot.nix
-│   ├── networking.nix
-│   ├── services.nix
-│   ├── system.nix
-│   ├── security.nix
-│   ├── users.nix
-│   ├── hardware.nix            
-│   └── scripts/default.nix
-└── home-manager.nix              
+│   ├── desktop-hardware.nix      # Hardware-specific settings for desktop
+│   ├── *-hardware-configuration.nix  # Hardware configuration for each host
+│   └── *-boot.nix               # LUKS/boot configuration for each host
+├── modules/                      # Modular configuration files
+│   ├── boot.nix                 # Boot and LUKS configurations
+│   ├── networking.nix           # Network settings
+│   ├── services.nix             # System services configuration
+│   ├── system.nix              # Core system settings
+│   ├── security.nix            # Security-related configurations
+│   ├── users.nix               # User management
+│   ├── hardware.nix            # Shared hardware configurations
+│   └── scripts/                # Utility scripts
+│       ├── default.nix         # Script definitions and packages
+│       ├── nixos-sync.sh      # NixOS configuration sync and rebuild
+│       ├── service-monitor.sh  # System service monitoring
+│       └── dotfiles-sync.sh    # Dotfiles management
+└── home-manager.nix            # Home-manager configuration
+```
 
+## Utility Scripts
 
+### NixOS Sync Script (nixos-sync.sh)
+Located in `/etc/nixos/modules/scripts/`, this script handles:
+- Initial system setup
+- Git repository management
+- LUKS configuration generation
+- NixOS rebuilding with flakes
+- Automated commits and pushes of configuration changes
 
-# NixOS Configuration Flake
+Key features:
+- First-time setup workflow with guided configuration
+- Automatic hostname detection for rebuilds
+- LUKS configuration management
+- Integration with notification system
 
-This repository contains the NixOS configuration files and supporting scripts for my personal NixOS setup. Please review the [Security Considerations](#security-considerations) section before using these scripts.
+### Service Monitor Script (service-monitor.sh)
+A utility script that:
+- Monitors system service status
+- Provides notifications for service failures
+- Tracks service performance
+- Logs service status changes
 
-## Overview
+### Dotfiles Sync Script (dotfiles-sync.sh)
+A script to manage dotfiles synchronization, featuring:
+- Automatic backup and versioning of dotfiles
+- Selective file synchronization
+- Firefox profile management
+- Integration with GNU Stow
+- Git-based version control
 
-The main components of this configuration are:
+Protected files and directories:
+- Security-sensitive files (.ssh, .gnupg)
+- Browser data
+- Cache directories
+- Game-related directories
+- State files
 
-1. `configuration.nix`: The central NixOS configuration file.
-2. `flake.nix`: The Nix Flake definition, which manages dependencies and outputs.
-3. `scripts/`:
-   - `dotfiles-sync`: A script to sync dotfiles with a Git repository.
-   - `nixos-sync`: A script to manage the NixOS configuration and perform system rebuilds.
-   - `service-monitor`: A script to monitor critical system services and send desktop notifications on failures.
+## Setup Instructions
 
-## Installation and Setup
+### First Time Setup
 
-1. **Clone the Repository**: Clone this repository to your local machine.
+1. Clone this repository:
+```bash
+git clone https://github.com/kedwar83/nixos-config.git /etc/nixos
+```
 
-   ```
-   git clone git@github.com:kedwar83/.nixos-config.git
-   ```
+2. Run the setup script:
+```bash
+sudo /etc/nixos/modules/scripts/nixos-sync.sh
+```
 
-2. **First-Time Setup**: Run the `nixos-sync` script as root to perform the initial setup:
+3. Follow the prompts to:
+   - Configure your host-specific settings
+   - Set up LUKS encryption
+   - Initialize your system configuration
 
-   ```
-   sudo ./scripts/nixos-sync
-   ```
+### Adding a New Host
 
-   This script will:
-   - Generate the LUKS configuration in `configuration.nix`.
-   - Copy the NixOS configuration files to `/etc/nixos`.
-   - Rebuild the NixOS system.
-   - Run the `dotfiles-sync` script to set up the user's dotfiles.
+1. Create a new host configuration file in `hosts/`
+2. Add hardware-specific settings in `hardware/`
+3. Update `flake.nix` to include the new host
+4. Run the setup script to generate LUKS configuration and hardware settings
 
-3. **Subsequent Syncs**: After the initial setup, you can run the `nixos-sync` script to keep your NixOS configuration up-to-date:
+### System Services Monitoring
 
-   ```
-   sudo ./scripts/nixos-sync
-   ```
+To start monitoring system services:
+```bash
+systemctl --user start service-monitor
+```
 
-   This script will:
-   - Sync the NixOS configuration files from `/etc/nixos` to the local Git repository.
-   - Format the Nix files using Alejandra.
-   - Rebuild the NixOS system.
-   - Commit and push the changes to the Git repository.
+The service monitor will:
+- Watch critical system services
+- Send desktop notifications for service events
+- Maintain service status logs
 
-4. **Dotfiles Sync**: The `dotfiles-sync` script is responsible for syncing your user's dotfiles with a Git repository. It is automatically run during the initial setup and can be run manually as needed:
+### Maintaining Dotfiles
 
-   ```
-   dotfiles-sync
-   ```
+Run the dotfiles sync script to manage your configuration files:
+```bash
+~/.config/nixos/modules/scripts/dotfiles-sync.sh
+```
 
-   This script will:
-   - Initialize a Git repository in `~/.dotfiles` if it doesn't exist.
-   - Copy your dotfiles from your home directory to the repository.
-   - Stow the dotfiles into your home directory.
-   - Commit and push any changes to the Git repository.
+## Usage
 
-## Scripts Overview
+### Rebuilding the System
 
-### `dotfiles-sync`
+To rebuild your system with the latest configuration:
+```bash
+sudo /etc/nixos/modules/scripts/nixos-sync.sh
+```
 
-This script is responsible for syncing your user's dotfiles with a Git repository. It is automatically run during the initial NixOS setup and can be run manually as needed.
+The script will:
+1. Format Nix files with Alejandra
+2. Check for changes
+3. Rebuild if necessary
+4. Commit and push changes
+5. Notify you of the result
 
-### `nixos-sync`
+### Monitoring Services
 
-This script is the main entry point for managing your NixOS configuration. It performs the following tasks:
+The service monitor provides:
+- Real-time service status monitoring
+- Desktop notifications for service events
+- Service restart attempts when appropriate
+- Detailed logging of service behavior
 
-1. Ensures the Git repository for the NixOS configuration is set up correctly.
-2. Formats the Nix files in the configuration directory using Alejandra.
-3. Copies the NixOS configuration files from `/etc/nixos` to the local Git repository.
-4. Checks for any changes in the repository, and if found, rebuilds the NixOS system and commits the changes to the repository.
+### Synchronizing Dotfiles
 
-### `service-monitor`
+The dotfiles sync script will:
+1. Backup existing configurations
+2. Sync new changes
+3. Manage Firefox profiles
+4. Handle version control
+5. Provide detailed logs of operations
 
-This script monitors the status of critical system services and sends desktop notifications if any of them fail. It currently checks the following services:
+## Configuration
 
-1. The NixOS auto-upgrade service.
-2. The `dotfiles-sync` service.
+### Boot Configuration
+The `modules/boot.nix` file contains:
+- GRUB bootloader configuration
+- LUKS encryption settings
+- Boot parameters and kernel settings
+- System initialization options
 
-If any of these services encounter errors, the script will send a notification to the active display users.
+This is separate from the host-specific boot configurations in `hardware/*-boot.nix` which contain:
+- Host-specific LUKS device configurations
+- Hardware-specific boot parameters
+- System-specific boot secrets
 
-## Security Considerations
+## Notes
 
-Before implementing these scripts, please be aware of the following security considerations:
+- All sensitive files are excluded from synchronization
+- System-specific configurations are maintained in separate host files
+- Hardware configurations are automatically generated but can be manually adjusted
+- The setup script maintains a flag file at `~/.system_setup_complete` to track initial setup
 
-1. The scripts contain hardcoded paths and repository URLs that should be modified for your specific setup.
-2. The `nixos-sync` script requires root privileges and should be used with caution.
-3. SSH keys and credentials should be properly secured and isolated.
-4. Review and test all scripts in a controlled environment before deployment.
-5. Consider implementing additional access controls and security measures based on your specific needs.
+## Troubleshooting
 
-## Customization
-
-You can customize this NixOS configuration by modifying the `configuration.nix` file and the scripts in the `scripts/` directory. If you have any questions or need assistance, feel free to reach out.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Check the failure log at `~/.dotfiles/failure_log.txt` for stow-related issues
+- System rebuild logs are stored in `/tmp/nixos-switch.log`
+- Service monitoring logs can be viewed with `journalctl --user -u service-monitor`
+- Git-related issues can be resolved by reinitializing the repository using the setup script

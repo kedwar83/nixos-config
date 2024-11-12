@@ -58,31 +58,35 @@ in {
     };
   };
 
-  # Define systemd-specific services
   systemd = {
-    # Autoloader service to run at startup and after waking from sleep
-    services.input-remapper-autoload = {
-      enable = true;
-      description = "Input Remapper Configuration Autoloader";
-      after = ["input-remapper.service" "plasma-workspace.target" "suspend.target" "hibernate.target"];
-      requires = ["input-remapper.service"];
-      serviceConfig = {
-        Type = "oneshot"; # Runs once per trigger
-        User = username;
-        ExecStartPre = "${pkgs.coreutils}/bin/sleep 2"; # Delay to ensure all dependencies are ready
-        ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
-        RemainAfterExit = "yes";
-      };
-      # Triggers on session startup, suspend, and hibernate wake-up
-      wantedBy = ["graphical-session.target" "suspend.target" "hibernate.target"];
-    };
+    user.services = {
+      input-remapper-autoload = {
+        enable = true;
+        description = "Input Remapper Configuration Autoloader";
 
-    # Define user-level services
-    user.services.mpris-proxy = {
-      description = "Mpris proxy";
-      after = ["network.target" "sound.target"];
-      wantedBy = ["default.target"];
-      serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
+        # Wait for the main input-remapper service and desktop session
+        after = ["input-remapper.service" "graphical-session.target"];
+        requires = ["graphical-session.target"];
+        partOf = ["graphical-session.target"];
+
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
+          ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
+          RemainAfterExit = "yes";
+        };
+
+        # Start with the graphical session
+        wantedBy = ["graphical-session.target"];
+      };
+      mpris-proxy = {
+        description = "Mpris proxy";
+        after = ["network.target" "sound.target"];
+        wantedBy = ["default.target"];
+        serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
+      };
     };
   };
+  # Ensure the user can access input devices
+  users.users.${username}.extraGroups = ["input"];
 }

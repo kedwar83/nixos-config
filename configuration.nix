@@ -9,8 +9,8 @@
   username = "keganre";
 in {
   imports = [
-    ./hardware-configuration.nix
-    ./boot.nix
+    ../hardware-configuration.nix
+    ../boot.nix
     ./networking.nix
     ./services.nix
     ./system.nix

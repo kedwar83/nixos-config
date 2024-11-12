@@ -3,13 +3,12 @@ set -e
 
 # Variables
 ACTUAL_USER=${SUDO_USER:-$USER}
-SHARED_NIXOS_CONFIG_DIR="/etc/nixos/shared-nixos-config"
+NIXOS_CONFIG_DIR="/etc/nixos"
 CURRENT_USER=$(id -un $ACTUAL_USER)
 SETUP_FLAG="/home/$ACTUAL_USER/.system_setup_complete"
-GIT_REPO_URL="git@github.com:kedwar83/shared-nixos-config.git"
+GIT_REPO_URL="git@github.com:kedwar83/nixos-config.git"
 USER_EMAIL="keganedwards@proton.me"
 SSH_KEY_FILE="/home/$ACTUAL_USER/.ssh/id_ed25519"
-NIXOS_ETC_DIR="/etc/nixos"
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
@@ -17,47 +16,54 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-echo "Running as user: $CURRENT_USER"
-echo "Shared NixOS config directory: $SHARED_NIXOS_CONFIG_DIR"
-echo "Git repository URL: $GIT_REPO_URL"
+setup_git() {
+    local config_dir="$1"
 
-# Setup git config as the regular user
-if [ ! -d "$SHARED_NIXOS_CONFIG_DIR/.git" ]; then
-    echo 'Initializing a new git repository in $SHARED_NIXOS_CONFIG_DIR...'
-    sudo -u $ACTUAL_USER git init "$SHARED_NIXOS_CONFIG_DIR"
-fi
+    # Ensure git is available
+    nix-shell -p git --run "true"
 
-if [ -z "$(sudo -u $ACTUAL_USER git config --global user.email)" ]; then
-    echo 'Setting git email...'
-    sudo -u $ACTUAL_USER git config --global user.email "$USER_EMAIL"
-fi
+    # Initialize git repository
+    if [ ! -d "$config_dir/.git" ]; then
+        echo "Initializing a new git repository in $config_dir..."
+        sudo -u $ACTUAL_USER nix-shell -p git --run "git init '$config_dir'"
+    fi
 
-if ! sudo -u $ACTUAL_USER git config --global --get safe.directory | grep -q "^$SHARED_NIXOS_CONFIG_DIR$"; then
-    echo "Adding $SHARED_NIXOS_CONFIG_DIR as a safe directory..."
-    sudo -u $ACTUAL_USER git config --global --add safe.directory "$SHARED_NIXOS_CONFIG_DIR"
-fi
+    # Configure git
+    if [ -z "$(sudo -u $ACTUAL_USER git config --global user.email)" ]; then
+        echo "Setting git email..."
+        sudo -u $ACTUAL_USER git config --global user.email "$USER_EMAIL"
+    fi
 
-# Check if SSH key exists, and generate one if not
-if [ ! -f "$SSH_KEY_FILE" ]; then
-    echo "No SSH key found, generating a new one for $USER_EMAIL..."
-    sudo -u $ACTUAL_USER ssh-keygen -t ed25519 -f "$SSH_KEY_FILE" -C "$USER_EMAIL" -N ""
-    echo "Please add the following SSH key to your GitHub account:"
-    sudo -u $ACTUAL_USER cat "$SSH_KEY_FILE.pub"
-    read -p "Press Enter after you've added the key to GitHub to continue..."
-fi
+    # Add safe directory
+    if ! sudo -u $ACTUAL_USER git config --global --get safe.directory | grep -q "^$config_dir$"; then
+        echo "Adding $config_dir as a safe directory..."
+        sudo -u $ACTUAL_USER git config --global --add safe.directory "$config_dir"
+    fi
 
-if ! sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" remote get-url origin &> /dev/null; then
-    echo 'No remote repository found. Adding origin remote...'
-    sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" remote add origin "$GIT_REPO_URL"
-else
-    echo 'Remote repository already configured.'
-fi
+    # Setup SSH key if needed
+    if [ ! -f "$SSH_KEY_FILE" ]; then
+        echo "No SSH key found, generating a new one for $USER_EMAIL..."
+        sudo -u $ACTUAL_USER ssh-keygen -t ed25519 -f "$SSH_KEY_FILE" -C "$USER_EMAIL" -N ""
+        echo "Please add the following SSH key to your GitHub account:"
+        sudo -u $ACTUAL_USER cat "$SSH_KEY_FILE.pub"
+        read -p "Press Enter after you've added the key to GitHub to continue..."
+    fi
+
+    # Configure remote
+    if ! sudo -u $ACTUAL_USER git -C "$config_dir" remote get-url origin &> /dev/null; then
+        echo "No remote repository found. Adding origin remote..."
+        sudo -u $ACTUAL_USER git -C "$config_dir" remote add origin "$GIT_REPO_URL"
+    fi
+}
 
 generate_luks_config() {
-    local boot_config_file="$NIXOS_ETC_DIR/boot.nix"
-    local temp_file=$(mktemp)
+    local hostname="$1"
+    local boot_config_file="$NIXOS_CONFIG_DIR/hardware/${hostname}-boot.nix"
     local boot_device=$(findmnt -n -o SOURCE /boot | grep -o '/dev/nvme[0-9]n[0-9]')
     local luks_uuids=($(blkid | grep "TYPE=\"crypto_LUKS\"" | grep -o "UUID=\"[^\"]*\"" | cut -d'"' -f2))
+
+    # Create the boot configuration directory if it doesn't exist
+    mkdir -p "$(dirname "$boot_config_file")"
 
     # Create the boot.nix file that contains boot-related configuration
     cat > "$boot_config_file" << EOL
@@ -91,72 +97,91 @@ EOL
 }
 EOL
 
-    echo "LUKS and boot configuration successfully written to $boot_config_file."
+    echo "LUKS and boot configuration successfully written to $boot_config_file"
 }
 
-# In the first-time setup section
-if [ ! -f "$SETUP_FLAG" ]; then
+first_time_setup() {
     echo "First-time setup detected..."
 
+    # Set ownership of /etc/nixos
     echo "Setting ownership of /etc/nixos to $ACTUAL_USER..."
-    chown -R "$ACTUAL_USER:$ACTUAL_USER" "$NIXOS_ETC_DIR"
+    chown -R "$ACTUAL_USER:$ACTUAL_USER" "$NIXOS_CONFIG_DIR"
 
-    echo "Generating LUKS configuration..."
-    generate_luks_config
+    # Setup git
+    setup_git "$NIXOS_CONFIG_DIR"
 
+    # Clone the repository
     echo "Cloning NixOS configuration repository..."
-    # Clone the Git repository into the SHARED_NIXOS_CONFIG_DIR
-    sudo -u $ACTUAL_USER git clone "$GIT_REPO_URL" "$SHARED_NIXOS_CONFIG_DIR"
+    sudo -u $ACTUAL_USER nix-shell -p git --run "git clone '$GIT_REPO_URL' '$NIXOS_CONFIG_DIR/temp' && cp -r '$NIXOS_CONFIG_DIR/temp/'* '$NIXOS_CONFIG_DIR/' && rm -rf '$NIXOS_CONFIG_DIR/temp'"
 
-    echo "NixOS Rebuilding..."
-    sudo bash -c "cd \"$NIXOS_ETC_DIR\""
-    nixos-rebuild switch
+    # Prompt user for host configuration
+    echo "Please add the configuration for your new machine in the appropriate files:"
+    echo "1. Create a new host configuration in hosts/"
+    echo "2. Add hardware-specific settings in hardware/"
+    echo "3. Update the flake.nix file in $NIXOS_CONFIG_DIR"
+    read -p "Press Enter after you've finished editing the configuration files..."
 
-    echo "Running dotfiles sync as user..."
-    sudo -u $ACTUAL_USER dotfiles-sync
+    # Get hostname from user
+    read -p "Please enter the hostname for this machine: " hostname
 
+    # Generate LUKS configuration
+    echo "Generating LUKS configuration..."
+    generate_luks_config "$hostname"
+
+    # Copy and rename hardware configuration
+    echo "Copying hardware configuration..."
+    cp "$NIXOS_CONFIG_DIR/hardware-configuration.nix" "$NIXOS_CONFIG_DIR/hardware/${hostname}-hardware-configuration.nix"
+
+    # Rebuild NixOS with flake
+    echo "Rebuilding NixOS..."
+    nixos-rebuild switch --flake "/etc/nixos#${hostname}"
+
+    # Create setup flag
     touch "$SETUP_FLAG"
-else
+
+    echo "First-time setup complete!"
+}
+
+regular_sync() {
     echo "Regular sync detected..."
+    local hostname=$(hostname)
 
     # Formatting Nix files with Alejandra
-    echo 'Formatting Nix files with Alejandra...'
-    alejandra "$SHARED_NIXOS_CONFIG_DIR"
+    echo "Formatting Nix files with Alejandra..."
+    alejandra "$NIXOS_CONFIG_DIR"
 
     # Adding changes to git
-    sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" add .
+    sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" add .
 
     # Check for changes in the repository
-    if ! sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" diff --quiet || ! sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" diff --cached --quiet; then
-        echo 'Changes detected, proceeding with rebuild and commit...'
+    if ! sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" diff --quiet || ! sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" diff --cached --quiet; then
+        echo "Changes detected, proceeding with rebuild and commit..."
 
         # NixOS rebuilding
-        echo 'NixOS Rebuilding...'
-        sudo bash -c "cd \"$NIXOS_ETC_DIR\""
-        nixos-rebuild switch &> /tmp/nixos-switch.log || (cat /tmp/nixos-switch.log | grep --color error && exit 1)
+        echo "NixOS Rebuilding..."
+        nixos-rebuild switch --flake "/etc/nixos#${hostname}" &> /tmp/nixos-switch.log || (cat /tmp/nixos-switch.log | grep --color error && exit 1)
 
-        # Get the current NixOS generation again
+        # Get the current NixOS generation
         current=$(nixos-rebuild list-generations | grep current)
 
         # Commit changes
-        sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" commit -m "$current"
+        sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" commit -m "$current"
 
-        # Fetch origin and check out the main branch
-        sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" fetch origin
-        if ! sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" rev-parse --verify main; then
-            echo 'Branch main does not exist. Creating it...'
-            sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" checkout -b main
-        else
-            echo 'Checking out main branch...'
-            sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" checkout main
-        fi
-
-        # Push changes to origin
-        sudo -u $ACTUAL_USER git -C "$SHARED_NIXOS_CONFIG_DIR" push origin main
+        # Push changes
+        sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" fetch origin
+        sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" checkout main || sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" checkout -b main
+        sudo -u $ACTUAL_USER git -C "$NIXOS_CONFIG_DIR" push origin main
 
         # Notify user
         sudo -u $ACTUAL_USER DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $ACTUAL_USER)/bus" notify-send "NixOS Rebuilt OK!" --icon=software-update-available
     else
         sudo -u $ACTUAL_USER DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $ACTUAL_USER)/bus" notify-send "No changes detected, skipping rebuild and commit." --icon=software-update-available
     fi
+}
+
+# Main script execution
+if [ ! -f "$SETUP_FLAG" ]; then
+    first_time_setup
+else
+    regular_sync
 fi

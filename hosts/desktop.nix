@@ -1,10 +1,11 @@
 # hosts/desktop.nix
-{ config
-, pkgs
-, inputs
-, lib
-, hostParams
-, ...
+{
+  config,
+  pkgs,
+  inputs,
+  lib,
+  hostParams,
+  ...
 }: {
   imports = [
     ../modules/networking.nix

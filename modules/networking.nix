@@ -1,7 +1,8 @@
-{ config
-, pkgs
-, hostParams
-, ...
+{
+  config,
+  pkgs,
+  hostParams,
+  ...
 }: {
   networking = {
     hostName = hostParams.hostname;

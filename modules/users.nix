@@ -4,7 +4,7 @@
   hostParams,
   ...
 }: let
-   username = hostParams.username;
+  username = hostParams.username;
 in {
   users.users.${username} = {
     isNormalUser = true;

@@ -2,12 +2,13 @@
   config,
   pkgs,
   lib,
-  hostParams,  # Add this parameter
+  hostParams, # Add this parameter
   ...
 }: let
   username = hostParams.username;
 in {
   services = {
+    timesyncd.enable = true;
     input-remapper.enable = true;
     avahi.enable = true;
     blueman.enable = true;

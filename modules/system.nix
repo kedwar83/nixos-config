@@ -5,6 +5,7 @@
   ...
 }: {
   nixpkgs.config.allowUnfree = true;
+  time.timeZone = "America/New_York";
   system = {
     autoUpgrade = {
       enable = true;

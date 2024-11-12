@@ -55,80 +55,32 @@ in {
       serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
     };
     services = {
-      StartInputRemapperDaemonAtLogin = {
+      input-remapper = {
         enable = true;
-        description = "Start input-remapper daemon after login";
-        after = ["multi-user.target"];
+        description = "Input Remapper Main Service";
         serviceConfig = {
-          Type = "oneshot";
-          User = "root";
+          Type = "dbus";
+          BusName = "com.github.sezanzeb.input-remapper";
+          ExecStart = "${pkgs.input-remapper}/bin/input-remapper-service";
+          Restart = "always";
+          RestartSec = "1s";
         };
-        script = lib.getExe (pkgs.writeShellApplication {
-          name = "start-input-mapper-daemon";
-          runtimeInputs = with pkgs; [input-remapper procps];
-          text = ''
-            # Wait for user session - check every 0.5s instead of 1s for faster startup
-            while ! pgrep -u ${username} "plasma"; do
-              sleep 0.5
-            done
-
-            # Start services if not running
-            if ! pgrep -u root "input-remapper-service" > /dev/null; then
-              input-remapper-service &
-            fi
-
-            sleep 2 # Added small delay between services to prevent race conditions
-
-            if ! pgrep -u root "input-remapper-reader" > /dev/null; then
-              input-remapper-reader-service &
-            fi
-
-            # Wait for services to be fully started - reduced from 5s to 3s
-            sleep 3
-
-            # Apply configuration
-            input-remapper-control --command stop-all
-            sleep 1 # Added small delay between commands
-            input-remapper-control --command autoload
-          '';
-        });
         wantedBy = ["multi-user.target"];
       };
-      ReloadInputRemapperAfterSleep = {
+
+      input-remapper-autoload = {
         enable = true;
-        description = "Reload input-remapper config after sleep";
-        after = ["suspend.target" "hibernate.target" "hybrid-sleep.target"];
+        description = "Input Remapper Configuration Autoloader";
+        after = ["input-remapper.service" "plasma-workspace.target"];
+        requires = ["input-remapper.service"];
         serviceConfig = {
-          User = username;
           Type = "oneshot";
+          User = username;
+          ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
+          ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
           RemainAfterExit = "yes";
         };
-        script = lib.getExe (pkgs.writeShellApplication {
-          name = "reload-input-mapper-config";
-          runtimeInputs = with pkgs; [input-remapper ps gawk systemd];
-          text = ''
-            # Wait for input-remapper services to be ready - check every 0.5s
-            while ! systemctl is-active input-remapper.service; do
-              sleep 0.5
-            done
-
-            sleep 1 # Added small delay to ensure service is fully ready
-
-            input-remapper-control --command stop-all
-            sleep 0.5 # Added small delay between commands
-            input-remapper-control --command autoload
-
-            # Check for success
-            if ! input-remapper-control --command is-active; then
-              # Retry if failed
-              sleep 1 # Reduced from 2s to 1s
-              input-remapper-control --command stop-all
-              sleep 0.5 # Added small delay between commands
-              input-remapper-control --command autoload
-            fi
-          '';
-        });
-        wantedBy = ["suspend.target" "hibernate.target" "hybrid-sleep.target"];
+        wantedBy = ["graphical-session.target"];
       };
     };
   };

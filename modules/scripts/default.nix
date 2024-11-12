@@ -2,9 +2,10 @@
   config,
   pkgs,
   lib,
+  hostParams,
   ...
 }: let
-  username = "keganre";
+  username = hostParams.username;
 
   # Create executable script derivations
   mkScript = name: text: pkgs.writeShellScriptBin name text;

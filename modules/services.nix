@@ -2,15 +2,15 @@
   config,
   pkgs,
   lib,
+  hostParams,  # Add this parameter
   ...
 }: let
-  username = "keganre";
+  username = hostParams.username;
 in {
   services = {
     input-remapper.enable = true;
     avahi.enable = true;
     blueman.enable = true;
-
     # Plasma desktop configuration
     desktopManager.plasma6.enable = true;
     displayManager = {

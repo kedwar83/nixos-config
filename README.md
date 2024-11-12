@@ -1,3 +1,22 @@
+nixos-config/
+├── flake.nix
+├── hosts/
+│   └── desktop.nix               # Desktop-specific configuration
+├── hardware/
+│   └── desktop-hardware.nix      # Hardware-specific settings for desktop
+├── modules/                      # Directory for modular files
+│   ├── boot.nix
+│   ├── networking.nix
+│   ├── services.nix
+│   ├── system.nix
+│   ├── security.nix
+│   ├── users.nix
+│   ├── hardware.nix            
+│   └── scripts/default.nix
+└── home-manager.nix              
+
+
+
 # NixOS Configuration Flake
 
 This repository contains the NixOS configuration files and supporting scripts for my personal NixOS setup. Please review the [Security Considerations](#security-considerations) section before using these scripts.

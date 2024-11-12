@@ -3,7 +3,7 @@
   pkgs,
   ...
 }: let
-  username = "keganre";
+  username = "hostParams.username";
   nixosSyncScript = pkgs.writeShellScriptBin "nixos-sync" (builtins.readFile ./scripts/nixos-sync.sh);
   dotfilesSyncScript = pkgs.writeShellScriptBin "dotfiles-sync" (builtins.readFile ./scripts/dotfiles-sync.sh);
   serviceMonitorScript = pkgs.writeShellScriptBin "service-monitor" (builtins.readFile ./scripts/service-monitor.sh);

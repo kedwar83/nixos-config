@@ -4,6 +4,7 @@
   inputs,
   ...
 }: {
+  nixpkgs.config.allowUnfree = true;
   system = {
     autoUpgrade = {
       enable = true;

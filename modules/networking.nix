@@ -1,12 +1,10 @@
-{
-  config,
-  pkgs,
-  ...
-}: let
-  hostname = "nixos";
-in {
+{ config
+, pkgs
+, hostParams
+, ...
+}: {
   networking = {
-    hostName = hostname;
+    hostName = hostParams.hostname;
     networkmanager.enable = true;
     nameservers = ["1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one"];
   };

@@ -1,9 +1,10 @@
 {
   config,
   pkgs,
+  hostParams,
   ...
 }: let
-  username = "keganre";
+   username = hostParams.username;
 in {
   users.users.${username} = {
     isNormalUser = true;

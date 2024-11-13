@@ -5,6 +5,10 @@
   ...
 }: let
   username = "keganre";
+  darkModeKdePlasmaScript = "./modules/scripts/darkman/dark-mode/kde-plasma.sh";
+  lightModeKdePlasmaScript = "./modules/scripts/darkman/light-mode/kde-plasma.sh";
+  darkModeKonsoleThemeScript = "./modules/scripts/darkman/dark-mode/kde-konsole-theme.sh";
+  lightModeKonsoleThemeScript = "./modules/scripts/darkman/light-mode/kde-konsole-theme.sh";
 in {
   home-manager = {
     backupFileExtension = "backup";
@@ -51,39 +55,13 @@ in {
         };
 
         darkModeScripts = {
-          "kde-plasma.sh" = ''
-            #!/bin/sh
-            lookandfeeltool -platform offscreen --apply "org.kde.breezedark.desktop"
-          '';
-
-          "kde-konsole-theme.sh" = ''
-            #!/usr/bin/env bash
-            PROFILE='Breath'
-            for pid in $(pidof konsole); do
-              qdbus "org.kde.konsole-$pid" "/Windows/1" setDefaultProfile "$PROFILE"
-              for session in $(qdbus "org.kde.konsole-$pid" /Windows/1 sessionList); do
-                qdbus "org.kde.konsole-$pid" "/Sessions/$session" setProfile "$PROFILE"
-              done
-            done
-          '';
+          "kde-plasma.sh" = "${darkModeKdePlasmaScript}/bin/dark-mode-kde-plasma";
+          "kde-konsole-theme.sh" = "${darkModeKonsoleThemeScript}/bin/dark-mode-konsole-theme";
         };
 
         lightModeScripts = {
-          "kde-plasma.sh" = ''
-            #!/bin/sh
-            lookandfeeltool -platform offscreen --apply "org.kde.breeze.desktop"
-          '';
-
-          "kde-konsole-theme.sh" = ''
-            #!/usr/bin/env bash
-            PROFILE='Breath-light'
-            for pid in $(pidof konsole); do
-              qdbus "org.kde.konsole-$pid" "/Windows/1" setDefaultProfile "$PROFILE"
-              for session in $(qdbus "org.kde.konsole-$pid" /Windows/1 sessionList); do
-                qdbus "org.kde.konsole-$pid" "/Sessions/$session" setProfile "$PROFILE"
-              done
-            done
-          '';
+          "kde-plasma.sh" = "${lightModeKdePlasmaScript}/bin/light-mode-kde-plasma";
+          "kde-konsole-theme.sh" = "${lightModeKonsoleThemeScript}/bin/light-mode-konsole-theme";
         };
       };
 

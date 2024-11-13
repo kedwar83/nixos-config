@@ -25,16 +25,6 @@
 
   environment = {
     systemPackages = with pkgs; [
-      # Development Tools
-      gcc-unwrapped # Provides g++ binary
-      gcc # GNU Compiler Collection
-      gnumake
-      binutils # Collection of binary tools
-      glibc # GNU C Library
-      glibc.dev # GNU C Library development files
-      python3 # Python interpreter
-      python3Packages.pip
-      python3Packages.virtualenv
     ];
   };
 }

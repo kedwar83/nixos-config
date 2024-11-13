@@ -14,8 +14,8 @@
     ../modules/security.nix
     ../modules/users.nix
     ../modules/hardware.nix
-    ../modules/scripts/default.nix
     ../home-manager.nix
+    ../modules/scripts/default.nix
   ];
 
   # Pass hostParams to all imported modules

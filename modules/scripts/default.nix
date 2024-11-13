@@ -12,15 +12,15 @@
 
   # Define scripts with executable permissions
   dotfilesSyncScript = mkScript "dotfiles-sync" ''
-    ${builtins.readFile ./dotfiles-sync.sh}
+    ${builtins.readFile ./system/dotfiles-sync.sh}
   '';
 
   nixosSyncScript = mkScript "nixos-sync" ''
-    ${builtins.readFile ./nixos-sync.sh}
+    ${builtins.readFile ./system/nixos-sync.sh}
   '';
 
   serviceMonitorScript = mkScript "service-monitor" ''
-    ${builtins.readFile ./service-monitor.sh}
+    ${builtins.readFile ./system/service-monitor.sh}
   '';
 in {
   systemd.services = {

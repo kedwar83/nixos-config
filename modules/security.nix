@@ -4,9 +4,9 @@
   ...
 }: let
   username = "hostParams.username";
-  nixosSyncScript = pkgs.writeShellScriptBin "nixos-sync" (builtins.readFile ./scripts/nixos-sync.sh);
-  dotfilesSyncScript = pkgs.writeShellScriptBin "dotfiles-sync" (builtins.readFile ./scripts/dotfiles-sync.sh);
-  serviceMonitorScript = pkgs.writeShellScriptBin "service-monitor" (builtins.readFile ./scripts/service-monitor.sh);
+  nixosSyncScript = pkgs.writeShellScriptBin "nixos-sync" (builtins.readFile ./scripts/system/nixos-sync.sh);
+  dotfilesSyncScript = pkgs.writeShellScriptBin "dotfiles-sync" (builtins.readFile ./scripts/system/dotfiles-sync.sh);
+  serviceMonitorScript = pkgs.writeShellScriptBin "service-monitor" (builtins.readFile ./scripts/system/service-monitor.sh);
 in {
   security = {
     rtkit.enable = true;

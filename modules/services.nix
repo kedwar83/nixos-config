@@ -63,27 +63,32 @@ in {
       input-remapper-autoload = {
         enable = true;
         description = "Input Remapper Configuration Autoloader";
-
-        # Wait for the main input-remapper service and desktop session
-        after = ["input-remapper.service" "graphical-session.target"];
+        after = [
+          "input-remapper.service"
+          "graphical-session.target"
+          "sleep.target"
+          "suspend.target"
+          "hibernate.target"
+          "hybrid-sleep.target"
+        ];
         requires = ["graphical-session.target"];
         partOf = ["graphical-session.target"];
-
         serviceConfig = {
           Type = "oneshot";
-          ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
+          ExecStartPre = "${pkgs.coreutils}/bin/sleep 5"; # Increased delay
           ExecStart = "${pkgs.input-remapper}/bin/input-remapper-control --command autoload";
           RemainAfterExit = "yes";
+          Restart = "on-failure";
+          RestartSec = "5s";
         };
-
-        # Start with the graphical session
-        wantedBy = ["graphical-session.target"];
-      };
-      mpris-proxy = {
-        description = "Mpris proxy";
-        after = ["network.target" "sound.target"];
-        wantedBy = ["default.target"];
-        serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
+        # Add sleep.target and others to ensure it starts after wake
+        wantedBy = [
+          "graphical-session.target"
+          "sleep.target"
+          "suspend.target"
+          "hibernate.target"
+          "hybrid-sleep.target"
+        ];
       };
     };
   };

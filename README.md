@@ -13,19 +13,27 @@ nixos-config/
 │   ├── *-hardware-configuration.nix  # Hardware configuration for each host
 │   └── *-boot.nix               # LUKS/boot configuration for each host
 ├── modules/                      # Modular configuration files
-│   ├── boot.nix                 # Boot and LUKS configurations
 │   ├── networking.nix           # Network settings
 │   ├── services.nix             # System services configuration
-│   ├── system.nix              # Core system settings
-│   ├── security.nix            # Security-related configurations
-│   ├── users.nix               # User management
-│   ├── hardware.nix            # Shared hardware configurations
-│   └── scripts/                # Utility scripts
-│       ├── default.nix         # Script definitions and packages
-│       ├── nixos-sync.sh      # NixOS configuration sync and rebuild
-│       ├── service-monitor.sh  # System service monitoring
-│       └── dotfiles-sync.sh    # Dotfiles management
-└── home-manager.nix            # Home-manager configuration
+│   ├── system.nix               # Core system settings
+│   ├── security.nix             # Security-related configurations
+│   ├── users.nix                # User management
+│   ├── hardware.nix             # Shared hardware configurations
+│   └── scripts/                 # Utility scripts
+│       ├── default.nix          # Script definitions and packages
+│       ├── system/              # General system scripts
+│       │   ├── nixos-sync.sh    # NixOS configuration sync and rebuild
+│       │   ├── service-monitor.sh   # System service monitoring
+│       │   ├── dotfiles-sync.sh     # Dotfiles management
+│       └── darkman/             # Dark/light mode scripts
+│           ├── light-mode/      # Scripts for light mode
+│           │   ├── kde-konsole-theme.sh  # Light mode Konsole theme
+│           │   ├── kde-plasma.sh        # Light mode Plasma theme
+│           ├── dark-mode/       # Scripts for dark mode
+│               ├── kde-konsole-theme.sh  # Dark mode Konsole theme
+│               ├── kde-plasma.sh        # Dark mode Plasma theme
+└── home-manager.nix             # Home-manager configuration
+
 ```
 
 ## Utility Scripts

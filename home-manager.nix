@@ -19,31 +19,56 @@ in {
         stateVersion = "24.05";
 
         packages = with pkgs; [
+          # Communication
           nicotine-plus
-          git
-          alejandra
-          inputs.firefox.packages.${pkgs.system}.firefox-nightly-bin
           signal-desktop-beta
-          kdePackages.kdeplasma-addons
-          ollama
-          strawberry-qt6
-          steam
-          gimp-with-plugins
+          mullvad-vpn
+
+          # Development
+          gcc-unwrapped
+          gcc
+          gnumake
+          binutils
+          glibc
+          glibc.dev
+          python3
+          python3Packages.pip
+          python3Packages.virtualenv
+          alejandra
           vscodium
           gh
+
+          # File Management
+          git
+          git-remote-gcrypt
+          stow
+
+          # Graphics
+          gimp-with-plugins
+
+          # Internet
+          inputs.firefox.packages.${pkgs.system}.firefox-nightly-bin
+          brave
+
+          # Multimedia
+          strawberry-qt6
+          mpv
+
+          # Productivity
+          joplin-desktop
+          qbittorrent
+
+          # System
           libnotify
           input-remapper
           darkman
-          joplin-desktop
-          mullvad-vpn
-          qbittorrent
-          stow
-          mpv
-          neovim
           libgcc
-          brave
-          git-remote-gcrypt
-          gnupg
+          neovim
+
+          # Utilities
+          ollama
+          steam
+          kdePackages.kdeplasma-addons
         ];
       };
 

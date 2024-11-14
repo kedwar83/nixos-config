@@ -7,15 +7,11 @@
   hostParams,
   ...
 }: {
-  imports = [
-    ../modules/networking.nix
-    ../modules/services.nix
-    ../modules/system.nix
-    ../modules/security.nix
-    ../modules/users.nix
-    ../modules/hardware.nix
-    ../home-manager.nix
-    ../modules/scripts/default.nix
+imports = [
+    ../../../modules/sys/config/default.nix
+    ./boot.nix
+    ./hardware-configuration.nix
+    ../../../modules/sys/config/users/kegan.nix
   ];
 
   # Pass hostParams to all imported modules

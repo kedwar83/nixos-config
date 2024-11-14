@@ -1,5 +1,5 @@
 {
-  description = "Nixos config flake";
+  description = "NixOS config flake";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -11,25 +11,20 @@
     };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    home-manager,
-    ...
-  } @ inputs: {
+  outputs = { self, nixpkgs, home-manager, firefox, ... }@inputs: {
     nixosConfigurations = {
       desktop = nixpkgs.lib.nixosSystem {
         specialArgs = {
-          inherit inputs;
+          inherit inputs;  # Pass all inputs to specialArgs
           hostParams = {
             username = "keganre";
             hostname = "desktop";
+            inputs = inputs; # Ensure inputs are accessible in hostParams
           };
         };
         modules = [
-          ./hosts/desktop.nix
-          ./hardware/desktop-hardware-configuration.nix
-          ./hardware/desktop-boot.nix
+          ./hosts/desktop/sys/configuration.nix
+          ./hosts/desktop/usr/home.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -38,32 +33,7 @@
               hostParams = {
                 username = "keganre";
                 hostname = "desktop";
-              };
-            };
-          }
-        ];
-      };
-
-      laptop = nixpkgs.lib.nixosSystem {
-        specialArgs = {
-          inherit inputs;
-          hostParams = {
-            username = "keganre";
-            hostname = "laptop";
-          };
-        };
-        modules = [
-          ./hosts/laptop.nix
-          ./hardware/laptop-hardware-configuration.nix
-          ./hardware/laptop-boot.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = {
-              hostParams = {
-                username = "keganre";
-                hostname = "laptop";
+                inputs = inputs; # Ensure inputs are accessible here as well
               };
             };
           }

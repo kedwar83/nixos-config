@@ -4,7 +4,7 @@
 send_notification() {
     local service=$1
     local status=$2
-    
+
     # Get list of active display users
     for userid in $(w -hs | cut -d' ' -f1 | sort -u); do
         # Get user's DBus session address
@@ -12,7 +12,7 @@ send_notification() {
         if [ -d "$user_runtime_dir" ]; then
             export DBUS_SESSION_BUS_ADDRESS="unix:path=$user_runtime_dir/bus"
             # Send notification as the user
-            sudo -u $userid DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+            DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
                 notify-send -u critical "Service Failure" "The $service service has failed: $status"
         fi
     done

@@ -7,8 +7,9 @@
   ...
 }: let
   username = hostParams.username;
-  scripts = pkgs.callPackage ../../modules/usr/services/default.nix {
-    inherit config pkgs lib hostParams;
+  # Import all scripts
+  scriptsModule = import ../../modules/usr/bin/default.nix {
+    inherit config pkgs lib;
   };
 in {
   home-manager.users.${username} = {...}: {
@@ -17,9 +18,11 @@ in {
       username = username;
       homeDirectory = "/home/${username}";
       stateVersion = "24.05";
-      packages = import ../../modules/usr/config/packages.nix {
-        inherit pkgs config hostParams;
-      };
+      packages =
+        import ../../modules/usr/config/packages.nix {
+          inherit pkgs config hostParams;
+        }
+        ++ (lib.attrValues scriptsModule.scripts); # Add all scripts
     };
 
     # Import programs
@@ -27,9 +30,9 @@ in {
       inherit config pkgs;
     };
 
-    # Import services through default.nix
+    # Other imports if needed
     imports = [
-      ../../modules/usr/services/services/default.nix
+      ../../modules/usr/services/default.nix
     ];
   };
 

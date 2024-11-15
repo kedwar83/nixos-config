@@ -6,5 +6,7 @@
       ./security.nix
       ./services.nix
       ./system.nix
+      ./programs.nix
+      ./systemd.nix
     ];
 }

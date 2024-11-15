@@ -1,11 +1,11 @@
 # /etc/nixos/modules/usr/services/darkman.nix
-{ pkgs, hostParams, ... }:
+{ pkgs, ... }:
 
 let
-  darkModeKdePlasmaScript = ../darkman/dark-mode/kde-plasma.sh;
-  lightModeKdePlasmaScript = ../darkman/light-mode/kde-plasma.sh;
-  darkModeKonsoleThemeScript = ../darkman/dark-mode/kde-konsole-theme.sh;
-  lightModeKonsoleThemeScript = ../darkman/light-mode/kde-konsole-theme.sh;
+  darkModeKdePlasmaScript = ../../bin/darkman/dark-mode/kde-plasma.sh;
+  lightModeKdePlasmaScript = ../../bin/darkman/light-mode/kde-plasma.sh;
+  darkModeKonsoleThemeScript = ../../bin/darkman/dark-mode/kde-konsole-theme.sh;
+  lightModeKonsoleThemeScript = ../../bin/darkman/light-mode/kde-konsole-theme.sh;
 in {
   services.darkman = {
     enable = true;

@@ -24,7 +24,7 @@
         };
         modules = [
           ./hosts/desktop/sys/configuration.nix
-          ./hosts/desktop/usr/home.nix
+          ./hosts/desktop/home.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;

@@ -1,4 +1,3 @@
-# modules/usr/services/systemd-services/dotfiles-sync.nix
 {
   config,
   pkgs,
@@ -25,7 +24,6 @@ in {
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${dotfilesSyncScript}";
-      User = username;
       IOSchedulingClass = "idle";
       CPUSchedulingPolicy = "idle";
     };

@@ -1,0 +1,61 @@
+.
+├── flake.lock
+├── flake.nix
+├── hosts
+│   └── desktop
+│       ├── home.nix
+│       └── sys
+│           ├── boot.nix
+│           ├── configuration.nix
+│           └── hardware-configuration.nix
+├── modules
+│   ├── sys
+│   │   ├── bin
+│   │   │   └── sys
+│   │   │       ├── default.nix
+│   │   │       └── nixos-sync.sh
+│   │   └── config
+│   │       ├── default.nix
+│   │       ├── hardware.nix
+│   │       ├── networking.nix
+│   │       ├── nixos-switch.log
+│   │       ├── programs.nix
+│   │       ├── security.nix
+│   │       ├── services.nix
+│   │       ├── systemd.nix
+│   │       ├── system.nix
+│   │       └── users
+│   │           └── kegan.nix
+│   └── usr
+│       ├── bin
+│       │   ├── darkman
+│       │   │   ├── dark-mode
+│       │   │   │   ├── kde-konsole-theme.sh
+│       │   │   │   └── kde-plasma.sh
+│       │   │   └── light-mode
+│       │   │       ├── kde-konsole-theme.sh
+│       │   │       └── kde-plasma.sh
+│       │   ├── default.nix
+│       │   ├── dotfiles-sync.sh
+│       │   └── service-monitor.sh
+│       ├── config
+│       │   ├── packages.nix
+│       │   └── programs.nix
+│       ├── services
+│       │   ├── services
+│       │   │   ├── darkman.nix
+│       │   │   └── default.nix
+│       │   └── systemd-services
+│       │       ├── default.nix
+│       │       ├── dotfiles-sync.nix
+│       │       ├── input-remapper-autoload.nix
+│       │       └── service-monitor.nix
+│       └── timers
+│           └── systemd-timers
+│               ├── default.nix
+│               ├── dotfiles-sync.nix
+│               └── service-monitor.nix
+├── README.md
+└── repo-tree.txt
+
+21 directories, 38 files

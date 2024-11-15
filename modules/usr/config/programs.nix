@@ -1,3 +1,7 @@
-{ pkgs, config, ... }: {
+{
+  pkgs,
+  config,
+  ...
+}: {
   git.enable = true;
 }

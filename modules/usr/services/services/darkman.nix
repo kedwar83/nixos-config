@@ -1,7 +1,5 @@
 # /etc/nixos/modules/usr/services/darkman.nix
-{ pkgs, ... }:
-
-let
+{pkgs, ...}: let
   darkModeKdePlasmaScript = ../../bin/darkman/dark-mode/kde-plasma.sh;
   lightModeKdePlasmaScript = ../../bin/darkman/light-mode/kde-plasma.sh;
   darkModeKonsoleThemeScript = ../../bin/darkman/dark-mode/kde-konsole-theme.sh;
@@ -14,7 +12,7 @@ in {
       lng = -78.90;
     };
 
-darkModeScripts = {
+    darkModeScripts = {
       "kde-plasma.sh" = "${darkModeKdePlasmaScript}/bin/dark-mode-kde-plasma";
       "kde-konsole-theme.sh" = "${darkModeKonsoleThemeScript}/bin/dark-mode-konsole-theme";
     };

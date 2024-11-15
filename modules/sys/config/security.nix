@@ -4,7 +4,7 @@
   ...
 }: let
   username = "hostParams.username";
-  nixosSyncScript = pkgs.writeShellScriptBin "nixos-sync" (builtins.readFile ../bin/sys/nixos-sync.sh);
+  nixosSyncScript = pkgs.writeShellScriptBin "nixos-sync" (builtins.readFile ../bin/nixos-sync.sh);
 in {
   security = {
     rtkit.enable = true;

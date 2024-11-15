@@ -11,11 +11,17 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, firefox, ... }@inputs: {
+  outputs = {
+    self,
+    nixpkgs,
+    home-manager,
+    firefox,
+    ...
+  } @ inputs: {
     nixosConfigurations = {
       desktop = nixpkgs.lib.nixosSystem {
         specialArgs = {
-          inherit inputs;  # Pass all inputs to specialArgs
+          inherit inputs; # Pass all inputs to specialArgs
           hostParams = {
             username = "keganre";
             hostname = "desktop";

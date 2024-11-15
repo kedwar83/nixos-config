@@ -1,4 +1,9 @@
-{ pkgs, config, hostParams, ... }:
+{
+  pkgs,
+  config,
+  hostParams,
+  ...
+}:
 with pkgs; [
   # Communication
   nicotine-plus
@@ -20,6 +25,7 @@ with pkgs; [
   # File Management
   git
   git-remote-gcrypt
+  tree
   stow
   # Graphics
   gimp-with-plugins
@@ -42,6 +48,6 @@ with pkgs; [
   ollama
   steam
   kdePackages.kdeplasma-addons
-  kdePackages.kate  # Text editor
+  kdePackages.kate # Text editor
   kdePackages.kclock
 ]

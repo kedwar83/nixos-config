@@ -1,13 +1,16 @@
 # modules/usr/services/systemd-services/service-monitor.nix
-{ config, pkgs, lib, hostParams, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  hostParams,
+  ...
+}: let
   username = hostParams.username;
 
   # Define the service monitor script here
   serviceMonitorScript = pkgs.writeScript "service-monitor.sh" (builtins.readFile ../../bin/service-monitor.sh);
-in
-{
+in {
   "service-monitor" = {
     description = "Monitor critical services for failures";
     path = with pkgs; [

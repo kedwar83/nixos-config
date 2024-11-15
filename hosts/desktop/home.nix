@@ -1,13 +1,17 @@
-{ config, pkgs, lib, inputs, hostParams, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  hostParams,
+  ...
+}: let
   username = hostParams.username;
   scripts = pkgs.callPackage ../../modules/usr/services/default.nix {
     inherit config pkgs lib hostParams;
   };
-in
-{
-  home-manager.users.${username} = { ... }: {
+in {
+  home-manager.users.${username} = {...}: {
     # Basic home configuration
     home = {
       username = username;

@@ -1,13 +1,16 @@
 # modules/usr/services/systemd-services/dotfiles-sync.nix
-{ config, pkgs, lib, hostParams, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  hostParams,
+  ...
+}: let
   username = hostParams.username;
 
   # Define the dotfiles sync script here
   dotfilesSyncScript = pkgs.writeScript "dotfiles-sync.sh" (builtins.readFile ../../bin/dotfiles-sync.sh);
-in
-{
+in {
   "dotfiles-sync" = {
     description = "Sync dotfiles to git repository";
     path = with pkgs; [

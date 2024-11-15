@@ -10,5 +10,5 @@ in {
     isNormalUser = true;
     description = "Kegan Riley Edwards";
     extraGroups = ["networkmanager" "wheel"];
-    };
+  };
 }

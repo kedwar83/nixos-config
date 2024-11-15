@@ -8,14 +8,12 @@
   username = hostParams.username;
 in {
   services = {
-        # Ollama and Mullvad VPN
-        ollama.enable = true;
-        mullvad-vpn = {
-        enable = true;
-        package = pkgs.mullvad-vpn;
-        };
-
-
+    # Ollama and Mullvad VPN
+    ollama.enable = true;
+    mullvad-vpn = {
+      enable = true;
+      package = pkgs.mullvad-vpn;
+    };
 
     timesyncd.enable = true;
     input-remapper.enable = true;

@@ -1,7 +1,10 @@
 # default.nix
-{ config, pkgs, lib, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
   mkScript = name: text: pkgs.writeShellScriptBin name text;
 
   scripts = {
@@ -29,4 +32,5 @@ let
       ${builtins.readFile ./darkman/light-mode/kde-konsole-theme.sh}
     '';
   };
-in scripts
+in
+  scripts

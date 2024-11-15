@@ -1,6 +1,9 @@
-{ config, pkgs, lib, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   dotfiles-sync = {
     description = "Timer for dotfiles sync service";
     wantedBy = ["timers.target"];

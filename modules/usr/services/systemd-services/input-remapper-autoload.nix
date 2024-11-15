@@ -1,6 +1,10 @@
-{ config, pkgs, lib, hostParams, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  hostParams,
+  ...
+}: let
   username = hostParams.username;
 in {
   user-input-remapper-autoload = {

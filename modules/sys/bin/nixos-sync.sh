@@ -58,14 +58,11 @@ setup_git() {
 
 generate_luks_config() {
     local hostname="$1"
-    local boot_config_file="$NIXOS_CONFIG_DIR/hardware/${hostname}-boot.nix"
+    local boot_config_file="$NIXOS_CONFIG_DIR/hosts/$hostname/sys/boot.nix"
     local boot_device=$(findmnt -n -o SOURCE /boot | grep -o '/dev/nvme[0-9]n[0-9]')
     local luks_uuids=($(blkid | grep "TYPE=\"crypto_LUKS\"" | grep -o "UUID=\"[^\"]*\"" | cut -d'"' -f2))
 
-    # Create the boot configuration directory if it doesn't exist
-    mkdir -p "$(dirname "$boot_config_file")"
-
-    # Create the boot.nix file that contains boot-related configuration
+    # Create the boot configuration file
     cat > "$boot_config_file" << EOL
 { config, pkgs, ... }:
 
@@ -114,27 +111,30 @@ first_time_setup() {
     echo "Cloning NixOS configuration repository..."
     sudo -u $ACTUAL_USER nix-shell -p git --run "git clone '$GIT_REPO_URL' '$NIXOS_CONFIG_DIR/temp' && cp -r '$NIXOS_CONFIG_DIR/temp/'* '$NIXOS_CONFIG_DIR/' && rm -rf '$NIXOS_CONFIG_DIR/temp'"
 
-    # Prompt user for host configuration
-    echo "Please add the configuration for your new machine in the appropriate files:"
-    echo "1. Create a new host configuration in hosts/"
-    echo "2. Add hardware-specific settings in hardware/"
-    echo "3. Update the flake.nix file in $NIXOS_CONFIG_DIR"
-    read -p "Press Enter after you've finished editing the configuration files..."
-
     # Get hostname from user
     read -p "Please enter the hostname for this machine: " hostname
 
-    # Generate LUKS configuration
+    # Create new host directory structure by copying from desktop
+    echo "Creating new host configuration structure..."
+    cp -r "$NIXOS_CONFIG_DIR/hosts/desktop" "$NIXOS_CONFIG_DIR/hosts/$hostname"
+
+    # Generate LUKS configuration and overwrite boot.nix
     echo "Generating LUKS configuration..."
     generate_luks_config "$hostname"
 
-    # Copy and rename hardware configuration
+    # Copy hardware configuration from /etc/nixos and overwrite the existing one
     echo "Copying hardware configuration..."
-    cp "$NIXOS_CONFIG_DIR/hardware-configuration.nix" "$NIXOS_CONFIG_DIR/hardware/${hostname}-hardware-configuration.nix"
+    cp "/etc/nixos/hardware-configuration.nix" "$NIXOS_CONFIG_DIR/hosts/$hostname/sys/hardware-configuration.nix"
+
+    # Prompt user to edit configuration files
+    echo "Please edit the following configuration files for your new host:"
+    echo "1. $NIXOS_CONFIG_DIR/hosts/$hostname/sys/configuration.nix"
+    echo "2. $NIXOS_CONFIG_DIR/hosts/$hostname/home.nix"
+    read -p "Press Enter after you've finished editing the configuration files..."
 
     # Rebuild NixOS with flake
     echo "Rebuilding NixOS..."
-    nixos-rebuild switch --flake "/etc/nixos#${hostname}"
+    nixos-rebuild switch --flake "/etc/nixos#${hostname}" 2>&1 | tee "$NIXOS_CONFIG_DIR/nixos-switch.log"
 
     # Create setup flag
     touch "$SETUP_FLAG"
@@ -159,7 +159,7 @@ regular_sync() {
 
         # NixOS rebuilding
         echo "NixOS Rebuilding..."
-        nixos-rebuild switch --flake "/etc/nixos#${hostname}" &> /tmp/nixos-switch.log || (cat /tmp/nixos-switch.log | grep --color error && exit 1)
+        nixos-rebuild switch --flake "/etc/nixos#${hostname}" 2>&1 | tee "$NIXOS_CONFIG_DIR/nixos-switch.log" || (cat "$NIXOS_CONFIG_DIR/nixos-switch.log" | grep --color error && exit 1)
 
         # Get the current NixOS generation
         current=$(nixos-rebuild list-generations | grep current)

@@ -1,6 +1,9 @@
-{ config, pkgs, lib, ... }:
-
 {
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   service-monitor = {
     description = "Timer for service monitoring";
     wantedBy = ["timers.target"];
